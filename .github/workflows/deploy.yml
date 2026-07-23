@@ -1,0 +1,38 @@
+name: Deploy Docs to Vercel
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        id: vercel_deploy
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          
+          vercel-args: ${{ github.ref_name == 'main' && '--prod' || '' }}
+          alias-domains: ${{ github.ref_name == 'staging' && 'docs-staging.postmatic.id' || '' }}
+
+      - name: Send Notification to Discord
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          username: "中野 二乃 (Docs)"
+          title: "Update Dokumentasi: ${{ github.ref_name == 'main' && 'PRODUCTION 🚀' || 'STAGING 🛠️' }}"
+          content: ${{ job.status == 'failure' && '🚨 **@here Haaah?!** Web dokumentasi saja bisa error?! Kalau panduannya hancur, gimana orang lain mau baca aturan sistemnya bodoh! Cepat perbaiki, bikin malu saja!' || '✅ Hmph, dokumentasinya sudah berhasil di-deploy. J-jangan kira aku bakalan baca tulisan kalian yang membosankan itu ya! Paling tidak sekarang nggak ada error.' }}
+          description: |
+            *Update* untuk halaman Dokumentasi sudah selesai. 
+            Coba pastikan *typo*-nya sudah kalian perbaiki semua! Jangan sampai ada kalimat yang aneh! 😤
