@@ -36,6 +36,8 @@ export function RightSidebar({ items, className }: RightSidebarProps) {
     return () => observer.disconnect()
   }, [items])
 
+  if (items.length === 0) return null
+
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       <p className="text-sm font-semibold text-foreground">Pada halaman ini</p>
