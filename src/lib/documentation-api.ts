@@ -1,6 +1,3 @@
-const configuredApiOrigin = (import.meta.env.VITE_API_ORIGIN as string | undefined)?.trim()
-const API_ORIGIN = configuredApiOrigin || (import.meta.env.DEV ? "" : "https://api-staging.postmatic.id")
-
 export type DocumentationType = "information" | "legality"
 
 interface ApiResponse<T> {
@@ -50,10 +47,6 @@ export interface RemoteDocumentation {
   updatedAt?: string | null
 }
 
-function buildUrl(path: string) {
-  return API_ORIGIN ? new URL(path, API_ORIGIN).toString() : path
-}
-
 function formatValidationErrors(validationErrors: unknown) {
   if (!validationErrors || typeof validationErrors !== "object") return ""
 
@@ -63,7 +56,7 @@ function formatValidationErrors(validationErrors: unknown) {
 }
 
 async function apiRequest<T>(path: string, signal?: AbortSignal) {
-  const response = await fetch(buildUrl(path), {
+  const response = await fetch(path, {
     cache: "no-store",
     signal,
   })
