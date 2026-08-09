@@ -1,11 +1,8 @@
-import { FileText, ShieldCheck, type LucideIcon } from "lucide-react"
-
 import type {
   DocumentationType,
-  RemoteDocumentation,
   RemoteDocumentationCategory,
   RemoteDocumentationTocArticle,
-} from "@/lib/documentation-api"
+} from "@/lib/documentation-types"
 
 export type HeadingItem = {
   id: string
@@ -29,7 +26,7 @@ export type DocumentationArticleMeta = {
 export type DocumentationNavItem = {
   title: string
   href: string
-  icon?: LucideIcon
+  type: DocumentationType
   badge?: string
 }
 
@@ -38,19 +35,9 @@ export type DocumentationNavSection = {
   items: DocumentationNavItem[]
 }
 
-export type RouteSelection = {
-  categorySlug?: string
-  articleSlug?: string
-}
-
 export const DOCUMENTATION_TYPE_LABEL: Record<DocumentationType, string> = {
   information: "Article Docs",
   legality: "Legality",
-}
-
-export const DOCUMENTATION_TYPE_ICON: Record<DocumentationType, LucideIcon> = {
-  information: FileText,
-  legality: ShieldCheck,
 }
 
 function isActive(value?: boolean | null) {
@@ -126,7 +113,7 @@ export function buildNavigationSections(
           .map((article) => ({
             title: article.title,
             href: article.href,
-            icon: DOCUMENTATION_TYPE_ICON[type],
+            type,
           }))
 
         return {
@@ -139,37 +126,21 @@ export function buildNavigationSections(
   return [...build(informationCategories, "information"), ...build(legalityCategories, "legality")]
 }
 
-export function readRouteSelection(pathname = window.location.pathname): RouteSelection {
-  const segments = pathname
-    .split("/")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => decodeURIComponent(part))
-
-  const normalizedSegments = segments[0] === "documentation" ? segments.slice(1) : segments
-
-  return {
-    categorySlug: normalizedSegments[0],
-    articleSlug: normalizedSegments[1],
-  }
-}
-
 export function findSelectedArticle(
   articles: DocumentationArticleMeta[],
-  selection: RouteSelection,
+  categorySlug?: string,
+  articleSlug?: string,
 ) {
-  if (selection.categorySlug && selection.articleSlug) {
+  if (categorySlug && articleSlug) {
     return (
       articles.find(
-        (article) =>
-          article.categorySlug === selection.categorySlug &&
-          article.slug === selection.articleSlug,
+        (article) => article.categorySlug === categorySlug && article.slug === articleSlug,
       ) ?? null
     )
   }
 
-  if (selection.categorySlug) {
-    return articles.find((article) => article.categorySlug === selection.categorySlug) ?? null
+  if (categorySlug) {
+    return articles.find((article) => article.categorySlug === categorySlug) ?? null
   }
 
   return articles[0] ?? null
@@ -203,45 +174,4 @@ export function formatDate(value?: string | null) {
     month: "long",
     year: "numeric",
   })
-}
-
-export function prepareArticleHtml(article: RemoteDocumentation | null | undefined) {
-  const sourceHtml = article?.article?.trim() || ""
-  if (!sourceHtml) return { html: "", headings: [] as HeadingItem[] }
-
-  const documentBody = new DOMParser().parseFromString(sourceHtml, "text/html").body
-
-  documentBody.querySelectorAll("script").forEach((element) => element.remove())
-  documentBody.querySelectorAll("*").forEach((element) => {
-    Array.from(element.attributes).forEach((attribute) => {
-      if (attribute.name.toLowerCase().startsWith("on")) {
-        element.removeAttribute(attribute.name)
-      }
-    })
-  })
-
-  const usedIds = new Set<string>()
-  const headings = Array.from(documentBody.querySelectorAll("h2, h3")).map((element, index) => {
-    const level = element.tagName.toLowerCase() === "h3" ? 3 : 2
-    const title = element.textContent?.trim() || `Section ${index + 1}`
-    const existingId = element.id.trim()
-    const baseId = existingId || slugify(title, `section-${index + 1}`)
-    let id = baseId
-    let suffix = 2
-
-    while (usedIds.has(id)) {
-      id = `${baseId}-${suffix}`
-      suffix += 1
-    }
-
-    usedIds.add(id)
-    element.id = id
-
-    return { id, title, level }
-  })
-
-  return {
-    html: documentBody.innerHTML,
-    headings,
-  }
 }

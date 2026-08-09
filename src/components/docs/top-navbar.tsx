@@ -1,4 +1,7 @@
+"use client"
+
 import { Menu, Search } from "lucide-react"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,12 +17,15 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
       <div className="relative flex h-14 items-center justify-between px-4 sm:px-6">
         {/* Left Section: Logo */}
         <div className="flex items-center gap-3">
-          <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
+            {/* Regular img elements preserve the reference dimensions during migration. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo1.png"
               alt="Postmatic Logo"
               className="h-6 w-auto dark:hidden"
             />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo2.png"
               alt="Postmatic Logo"
@@ -28,7 +34,7 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
             <span className="text-lg font-bold tracking-tight">
               Postmatic
             </span>
-          </a>
+          </Link>
         </div>
 
         {/* Middle Section: Centered Search */}
@@ -55,6 +61,8 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
               size="sm"
               asChild
             >
+              {/* Keep a full navigation because the dashboard is outside the docs router. */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a href="/dashboard">Mulai Sekarang</a>
             </Button>
           </div>
