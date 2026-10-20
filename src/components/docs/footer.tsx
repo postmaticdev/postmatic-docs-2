@@ -1,57 +1,55 @@
-import * as React from "react"
+import Link from "next/link"
 
-import { cn } from "@/lib/utils"
+import { PostmaticLogo } from "@/components/docs/logo"
+import { localizeHref, type Locale } from "@/i18n/config"
+import type { Dictionary } from "@/i18n/dictionaries"
+import { LANDING_URL, SUPPORT_EMAIL, privacyUrl, termsUrl } from "@/lib/site-config"
 
-type FooterProps = React.HTMLAttributes<HTMLElement>
+export function Footer({ lang, dict }: { lang: Locale; dict: Dictionary }) {
+  const links = [
+    { label: dict.footer.website, href: lang === "id" ? LANDING_URL : `${LANDING_URL}/${lang}` },
+    { label: dict.footer.help, href: `mailto:${SUPPORT_EMAIL}` },
+    { label: dict.footer.privacy, href: privacyUrl(lang) },
+    { label: dict.footer.terms, href: termsUrl(lang) },
+  ]
 
-export function Footer({ className, ...props }: FooterProps) {
   return (
-    <footer
-      className={cn("relative md:sticky bottom-0 z-30 border-t border-border/40 bg-background/80 backdrop-blur-md", className)}
-      {...props}
-    >
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between gap-4 px-4 py-4 sm:flex-row sm:px-6 md:py-5">
-        <div className="flex flex-col items-center gap-1.5 text-center text-sm text-muted-foreground sm:flex-row sm:gap-2 sm:text-left">
-          <div className="flex items-center gap-2">
-            <img
-              src="/logo1.png"
-              alt="Postmatic Logo"
-              className="h-4 w-auto dark:hidden"
-            />
-            <img
-              src="/logo2.png"
-              alt="Postmatic Logo"
-              className="h-4 w-auto hidden dark:block"
-            />
-            <span className="font-semibold text-foreground text-xs tracking-wide uppercase">Postmatic.id</span>
+    <footer className="flex border-t bg-background">
+      {/* Kolom sama dengan artikel & band kontak (plus ruang sidebar kanan di xl).
+          Mobile: semua rata tengah; desktop: identitas di kiri, tautan di kanan. */}
+      <div className="min-w-0 flex-1">
+        <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-4 py-6 text-center sm:px-6 lg:flex-row lg:justify-between lg:text-left">
+          <div className="flex flex-col items-center gap-1.5 text-sm text-muted-foreground sm:flex-row sm:gap-2">
+            <Link href={localizeHref(lang, "/")} className="flex w-fit items-center gap-2">
+              <PostmaticLogo className="h-4" />
+              <span className="text-xs font-semibold tracking-wide text-foreground uppercase">Postmatic.id</span>
+            </Link>
+            <span className="hidden text-muted-foreground/60 sm:inline" aria-hidden="true">
+              ·
+            </span>
+            <span className="text-xs">
+              © {new Date().getFullYear()} - {dict.footer.tagline}
+            </span>
           </div>
-          <span className="hidden sm:inline text-muted-foreground/60">·</span>
-          <span className="text-xs">
-            © {new Date().getFullYear()} - Made with love for your business.
-          </span>
-        </div>
 
-        <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs font-medium text-muted-foreground sm:text-sm">
-          <a
-            href="#status"
-            className="transition-colors hover:text-foreground"
-          >
-            Status
-          </a>
-          <a
-            href="#privasi"
-            className="transition-colors hover:text-foreground"
-          >
-            Privasi
-          </a>
-          <a
-            href="#ketentuan"
-            className="transition-colors hover:text-foreground"
-          >
-            Ketentuan
-          </a>
-        </nav>
+          <nav aria-label={dict.footer.linksLabel}>
+            <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm font-medium text-muted-foreground lg:justify-end">
+              {links.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="transition-colors hover:text-foreground"
+                    {...(link.href.startsWith("http") ? { target: "_blank", rel: "noopener" } : {})}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
       </div>
+      <div className="hidden w-64 shrink-0 xl:block" aria-hidden="true" />
     </footer>
   )
 }

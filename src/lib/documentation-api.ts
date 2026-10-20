@@ -1,100 +1,115 @@
-export type DocumentationType = "information" | "legality"
+import "server-only"
 
-interface ApiResponse<T> {
+import { cache } from "react"
+
+import {
+  buildDocumentationCategories,
+  buildNavigationSections,
+  type DocumentationType,
+  type RemoteDocumentation,
+  type RemoteDocumentationCategory,
+} from "@/lib/documentation-model"
+
+// Default sama dengan proxy lama (vercel.json / vite.config.ts).
+const API_ORIGIN = (
+  process.env.API_ORIGIN?.trim() ||
+  process.env.API_PROXY_TARGET?.trim() ||
+  process.env.VITE_API_PROXY_TARGET?.trim() ||
+  process.env.VITE_API_ORIGIN?.trim() ||
+  "https://api-staging.postmatic.id"
+).replace(/\/+$/, "")
+
+export const DOCUMENTATION_REVALIDATE_SECONDS = 300
+export const DOCUMENTATION_CACHE_TAG = "documentation"
+
+type ApiResponse<T> = {
   data: T
   responseMessage?: string
-  metaData?: {
-    code?: number
-    message?: string
+  metaData?: { code?: number; message?: string }
+}
+
+class DocumentationApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message)
+    this.name = "DocumentationApiError"
   }
-  validationErrors?: unknown
 }
 
-export interface RemoteDocumentationTocArticle {
-  id: number | string
-  slug?: string | null
-  title?: string | null
-  description?: string | null
-  icon?: string | null
-  isActive?: boolean | null
+// Permintaan identik yang sedang berjalan di proses yang sama dipakai bersama.
+// Artikel bergambar base64 bisa berukuran beberapa MB dan lambat diunduh,
+// jadi jangan sampai diunduh berulang kali secara paralel saat build/revalidasi.
+const inFlight = new Map<string, Promise<unknown>>()
+
+function apiRequest<T>(path: string) {
+  let request = inFlight.get(path) as Promise<T> | undefined
+  if (!request) {
+    request = sendRequest<T>(path).finally(() => inFlight.delete(path))
+    inFlight.set(path, request)
+  }
+  return request
 }
 
-export interface RemoteDocumentationCategory {
-  id: number | string
-  slug?: string | null
-  name?: string | null
-  type?: DocumentationType | string | null
-  isActive?: boolean | null
-  documentations?: RemoteDocumentationTocArticle[] | null
-}
-
-export interface RemoteDocumentation {
-  id: number | string
-  slug?: string | null
-  title?: string | null
-  description?: string | null
-  icon?: string | null
-  article?: string | null
-  type?: DocumentationType | string | null
-  category?: {
-    id?: number | string | null
-    slug?: string | null
-    name?: string | null
-    type?: DocumentationType | string | null
-  } | null
-  isActive?: boolean | null
-  createdAt?: string | null
-  updatedAt?: string | null
-}
-
-function formatValidationErrors(validationErrors: unknown) {
-  if (!validationErrors || typeof validationErrors !== "object") return ""
-
-  return Object.entries(validationErrors as Record<string, unknown>)
-    .map(([field, message]) => `${field}: ${String(message)}`)
-    .join(", ")
-}
-
-async function apiRequest<T>(path: string, signal?: AbortSignal) {
-  const response = await fetch(path, {
-    cache: "no-store",
-    signal,
+async function sendRequest<T>(path: string) {
+  const response = await fetch(`${API_ORIGIN}${path}`, {
+    headers: { accept: "application/json" },
+    next: { revalidate: DOCUMENTATION_REVALIDATE_SECONDS, tags: [DOCUMENTATION_CACHE_TAG] },
+    signal: AbortSignal.timeout(150_000),
   })
-  const payload = (await response.json().catch(() => null)) as ApiResponse<T> | null
+  const body = await response.text()
+  let payload: ApiResponse<T> | null = null
+  try {
+    payload = JSON.parse(body) as ApiResponse<T>
+  } catch (error) {
+    console.error(`[docs] Respons API tidak valid (${response.status}, ${body.length} byte) untuk ${path}:`, error)
+  }
 
   if (!response.ok || !payload) {
-    const validationMessage = formatValidationErrors(payload?.validationErrors)
-
-    throw new Error(
-      validationMessage ||
-        payload?.responseMessage ||
+    throw new DocumentationApiError(
+      payload?.responseMessage ||
         payload?.metaData?.message ||
         `Request failed with status ${response.status}`,
+      response.status,
     )
   }
 
   return payload.data
 }
 
-export function getDocumentationTableOfContents(
-  type: DocumentationType,
-  signal?: AbortSignal,
-) {
-  return apiRequest<RemoteDocumentationCategory[]>(
+const getTableOfContents = cache(async (type: DocumentationType) => {
+  const data = await apiRequest<RemoteDocumentationCategory[] | null>(
     `/api/app/documentation/${type}-table-of-contents`,
-    signal,
   )
-}
+  return Array.isArray(data) ? data : []
+})
 
-export function getDocumentationArticleBySlug(
-  categorySlug: string,
-  articleSlug: string,
-  signal?: AbortSignal,
-) {
-  return apiRequest<RemoteDocumentation>(
-    `/api/app/documentation/article/${encodeURIComponent(categorySlug)}/${encodeURIComponent(
-      articleSlug,
-    )}`,
-    signal,
-  )
-}
+// Kegagalan memuat daftar isi sengaja dilempar, bukan diganti daftar kosong:
+// saat revalidasi ISR, Next tetap menyajikan halaman lama yang valid alih-alih
+// meng-cache situs kosong (kategori 404, sidebar kosong, gambar 404).
+export const getDocumentationIndex = cache(async () => {
+  const [information, legality] = await Promise.all([
+    getTableOfContents("information"),
+    getTableOfContents("legality"),
+  ])
+
+  const categories = buildDocumentationCategories(information, legality)
+
+  return {
+    categories,
+    articles: categories.flatMap((category) => category.articles),
+    sections: buildNavigationSections(categories),
+  }
+})
+
+export const getDocumentationArticle = cache(async (categorySlug: string, articleSlug: string) => {
+  try {
+    return await apiRequest<RemoteDocumentation | null>(
+      `/api/app/documentation/article/${encodeURIComponent(categorySlug)}/${encodeURIComponent(articleSlug)}`,
+    )
+  } catch (error) {
+    if (error instanceof DocumentationApiError && error.status === 404) return null
+    throw error
+  }
+})

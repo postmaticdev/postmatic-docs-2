@@ -1,4 +1,5 @@
-/* eslint-disable react-refresh/only-export-components */
+"use client"
+
 import * as React from "react"
 
 type Theme = "dark" | "light" | "system"
@@ -29,6 +30,24 @@ function isTheme(value: string | null): value is Theme {
   }
 
   return THEME_VALUES.includes(value as Theme)
+}
+
+// localStorage melempar SecurityError bila cookie/data situs diblokir; tema
+// tetap berjalan (tanpa diingat) alih-alih membuat seluruh aplikasi error.
+function readStoredTheme(storageKey: string) {
+  try {
+    return localStorage.getItem(storageKey)
+  } catch {
+    return null
+  }
+}
+
+function storeTheme(storageKey: string, theme: Theme) {
+  try {
+    localStorage.setItem(storageKey, theme)
+  } catch {
+    // Abaikan: pilihan tema hanya berlaku untuk sesi ini.
+  }
 }
 
 function getSystemTheme(): ResolvedTheme {
@@ -85,7 +104,11 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setThemeState] = React.useState<Theme>(() => {
-    const storedTheme = localStorage.getItem(storageKey)
+    if (typeof window === "undefined") {
+      return defaultTheme
+    }
+
+    const storedTheme = readStoredTheme(storageKey)
     if (isTheme(storedTheme)) {
       return storedTheme
     }
@@ -95,7 +118,7 @@ export function ThemeProvider({
 
   const setTheme = React.useCallback(
     (nextTheme: Theme) => {
-      localStorage.setItem(storageKey, nextTheme)
+      storeTheme(storageKey, nextTheme)
       setThemeState(nextTheme)
     },
     [storageKey]
@@ -167,7 +190,7 @@ export function ThemeProvider({
                 ? "light"
                 : "dark"
 
-        localStorage.setItem(storageKey, nextTheme)
+        storeTheme(storageKey, nextTheme)
         return nextTheme
       })
     }

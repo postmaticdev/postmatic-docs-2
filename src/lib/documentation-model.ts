@@ -1,11 +1,6 @@
-import { FileText, ShieldCheck, type LucideIcon } from "lucide-react"
+// Tipe dan helper murni (tanpa I/O) yang dipakai server maupun client.
 
-import type {
-  DocumentationType,
-  RemoteDocumentation,
-  RemoteDocumentationCategory,
-  RemoteDocumentationTocArticle,
-} from "@/lib/documentation-api"
+export type DocumentationType = "information" | "legality"
 
 export type HeadingItem = {
   id: string
@@ -18,39 +13,85 @@ export type DocumentationArticleMeta = {
   slug: string
   title: string
   description: string
-  icon: string
   type: DocumentationType
-  typeLabel: string
   categoryName: string
   categorySlug: string
   href: string
 }
 
-export type DocumentationNavItem = {
-  title: string
+export type DocumentationCategory = {
+  slug: string
+  name: string
+  type: DocumentationType
   href: string
-  icon?: LucideIcon
-  badge?: string
+  articles: DocumentationArticleMeta[]
 }
 
 export type DocumentationNavSection = {
+  key: string
   title: string
-  items: DocumentationNavItem[]
+  href: string
+  type: DocumentationType
+  items: { title: string; href: string }[]
 }
 
-export type RouteSelection = {
-  categorySlug?: string
-  articleSlug?: string
+export type RemoteDocumentationTocArticle = {
+  id: number | string
+  slug?: string | null
+  title?: string | null
+  description?: string | null
+  icon?: string | null
+  isActive?: boolean | null
 }
+
+export type RemoteDocumentationCategory = {
+  id: number | string
+  slug?: string | null
+  name?: string | null
+  type?: string | null
+  isActive?: boolean | null
+  documentations?: RemoteDocumentationTocArticle[] | null
+}
+
+export type RemoteDocumentation = {
+  id: number | string
+  slug?: string | null
+  title?: string | null
+  description?: string | null
+  icon?: string | null
+  article?: string | null
+  type?: string | null
+  category?: {
+    id?: number | string | null
+    slug?: string | null
+    name?: string | null
+    type?: string | null
+  } | null
+  isActive?: boolean | null
+  createdAt?: string | null
+  updatedAt?: string | null
+}
+
+// Id elemen tetap di setiap halaman; heading artikel tidak boleh memakai id ini.
+export const OVERVIEW_ID = "ikhtisar"
+export const CONTACT_SECTION_ID = "hubungi-kami"
+export const RESERVED_ELEMENT_IDS = ["top", "konten", OVERVIEW_ID, CONTACT_SECTION_ID, `${CONTACT_SECTION_ID}-judul`]
 
 export const DOCUMENTATION_TYPE_LABEL: Record<DocumentationType, string> = {
   information: "Article Docs",
   legality: "Legality",
 }
 
-export const DOCUMENTATION_TYPE_ICON: Record<DocumentationType, LucideIcon> = {
-  information: FileText,
-  legality: ShieldCheck,
+// Data API diperlakukan sebagai tidak tepercaya: nilai non-string atau non-array
+// tidak boleh membuat build/render gagal.
+function text(value: unknown) {
+  if (typeof value === "string") return value.trim()
+  if (typeof value === "number") return String(value)
+  return ""
+}
+
+function list<T>(value: T[] | null | undefined) {
+  return Array.isArray(value) ? value.filter((item): item is T => Boolean(item) && typeof item === "object") : []
 }
 
 function isActive(value?: boolean | null) {
@@ -59,6 +100,8 @@ function isActive(value?: boolean | null) {
 
 export function slugify(value: string, fallback = "section") {
   const slug = value
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
     .trim()
     .toLowerCase()
     .replace(/&/g, " and ")
@@ -68,122 +111,85 @@ export function slugify(value: string, fallback = "section") {
   return slug || fallback
 }
 
+export function safeDecode(value: string) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+export function createCategoryHref(categorySlug: string) {
+  return `/${encodeURIComponent(categorySlug)}`
+}
+
 export function createArticleHref(categorySlug: string, articleSlug: string) {
   return `/${encodeURIComponent(categorySlug)}/${encodeURIComponent(articleSlug)}`
 }
 
-function mapTocArticle(
-  item: RemoteDocumentationTocArticle,
-  category: RemoteDocumentationCategory,
-  type: DocumentationType,
-) {
-  const slug = item.slug?.trim()
-  const categorySlug = category.slug?.trim()
-
-  if (!slug || !categorySlug || !isActive(item.isActive)) return null
-
-  return {
-    id: String(item.id),
-    slug,
-    title: item.title?.trim() || "Untitled",
-    description: item.description?.trim() || "",
-    icon: item.icon?.trim() || "",
-    type,
-    typeLabel: DOCUMENTATION_TYPE_LABEL[type],
-    categoryName: category.name?.trim() || "Uncategorized",
-    categorySlug,
-    href: createArticleHref(categorySlug, slug),
-  } satisfies DocumentationArticleMeta
+// Judul dari admin kadang ditulis huruf kecil semua ("terms & condition").
+function tidyTitle(value: string) {
+  return value === value.toLowerCase() ? value.replace(/(^|\s)\p{L}/gu, (c) => c.toUpperCase()) : value
 }
 
-export function buildDocumentationArticles(
+export function buildDocumentationCategories(
   informationCategories: RemoteDocumentationCategory[],
   legalityCategories: RemoteDocumentationCategory[],
 ) {
+  const seen = new Set<string>()
+
   const build = (categories: RemoteDocumentationCategory[], type: DocumentationType) =>
-    categories
-      .filter((category) => category.slug?.trim() && isActive(category.isActive))
-      .flatMap((category) =>
-        (category.documentations ?? [])
-          .map((article) => mapTocArticle(article, category, type))
-          .filter((article): article is DocumentationArticleMeta => Boolean(article)),
-      )
+    list(categories).flatMap((category) => {
+      const slug = text(category.slug)
+      if (!slug || !isActive(category.isActive) || seen.has(slug)) return []
+      seen.add(slug)
 
-  return [...build(informationCategories, "information"), ...build(legalityCategories, "legality")]
-}
+      const name = text(category.name) || DOCUMENTATION_TYPE_LABEL[type]
+      const articleSlugs = new Set<string>()
+      const articles = list(category.documentations).flatMap((item) => {
+        const articleSlug = text(item.slug)
+        if (!articleSlug || !isActive(item.isActive) || articleSlugs.has(articleSlug)) return []
+        articleSlugs.add(articleSlug)
 
-export function buildNavigationSections(
-  informationCategories: RemoteDocumentationCategory[],
-  legalityCategories: RemoteDocumentationCategory[],
-) {
-  const build = (categories: RemoteDocumentationCategory[], type: DocumentationType) =>
-    categories
-      .filter((category) => category.slug?.trim() && isActive(category.isActive))
-      .map((category) => {
-        const items = (category.documentations ?? [])
-          .map((article) => mapTocArticle(article, category, type))
-          .filter((article): article is DocumentationArticleMeta => Boolean(article))
-          .map((article) => ({
-            title: article.title,
-            href: article.href,
-            icon: DOCUMENTATION_TYPE_ICON[type],
-          }))
-
-        return {
-          title: category.name?.trim() || DOCUMENTATION_TYPE_LABEL[type],
-          items,
-        } satisfies DocumentationNavSection
+        return [
+          {
+            id: String(item.id),
+            slug: articleSlug,
+            title: tidyTitle(text(item.title) || "Untitled"),
+            description: text(item.description),
+            type,
+            categoryName: name,
+            categorySlug: slug,
+            href: createArticleHref(slug, articleSlug),
+          } satisfies DocumentationArticleMeta,
+        ]
       })
-      .filter((section) => section.items.length > 0)
+
+      if (articles.length === 0) return []
+
+      return [{ slug, name, type, href: createCategoryHref(slug), articles } satisfies DocumentationCategory]
+    })
 
   return [...build(informationCategories, "information"), ...build(legalityCategories, "legality")]
 }
 
-export function readRouteSelection(pathname = window.location.pathname): RouteSelection {
-  const segments = pathname
-    .split("/")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => decodeURIComponent(part))
-
-  const normalizedSegments = segments[0] === "documentation" ? segments.slice(1) : segments
-
-  return {
-    categorySlug: normalizedSegments[0],
-    articleSlug: normalizedSegments[1],
-  }
-}
-
-export function findSelectedArticle(
-  articles: DocumentationArticleMeta[],
-  selection: RouteSelection,
-) {
-  if (selection.categorySlug && selection.articleSlug) {
-    return (
-      articles.find(
-        (article) =>
-          article.categorySlug === selection.categorySlug &&
-          article.slug === selection.articleSlug,
-      ) ?? null
-    )
-  }
-
-  if (selection.categorySlug) {
-    return articles.find((article) => article.categorySlug === selection.categorySlug) ?? null
-  }
-
-  return articles[0] ?? null
+export function buildNavigationSections(categories: DocumentationCategory[]): DocumentationNavSection[] {
+  return categories.map((category) => ({
+    key: `${category.type}:${category.slug}`,
+    title: category.name,
+    href: category.href,
+    type: category.type,
+    items: category.articles.map((article) => ({ title: article.title, href: article.href })),
+  }))
 }
 
 export function findArticleNeighbors(
   articles: DocumentationArticleMeta[],
-  selectedArticle: DocumentationArticleMeta | null,
+  categorySlug: string,
+  articleSlug: string,
 ) {
-  if (!selectedArticle) return { previousArticle: null, nextArticle: null }
-
   const index = articles.findIndex(
-    (article) =>
-      article.categorySlug === selectedArticle.categorySlug && article.slug === selectedArticle.slug,
+    (article) => article.categorySlug === categorySlug && article.slug === articleSlug,
   )
 
   return {
@@ -192,56 +198,23 @@ export function findArticleNeighbors(
   }
 }
 
-export function formatDate(value?: string | null) {
+export function formatDate(value?: string | null, locale = "id-ID") {
   if (!value) return null
 
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
 
-  return date.toLocaleDateString("id-ID", {
+  return date.toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: "Asia/Jakarta",
   })
 }
 
-export function prepareArticleHtml(article: RemoteDocumentation | null | undefined) {
-  const sourceHtml = article?.article?.trim() || ""
-  if (!sourceHtml) return { html: "", headings: [] as HeadingItem[] }
+export function toIsoDate(value?: string | null) {
+  if (!value) return undefined
 
-  const documentBody = new DOMParser().parseFromString(sourceHtml, "text/html").body
-
-  documentBody.querySelectorAll("script").forEach((element) => element.remove())
-  documentBody.querySelectorAll("*").forEach((element) => {
-    Array.from(element.attributes).forEach((attribute) => {
-      if (attribute.name.toLowerCase().startsWith("on")) {
-        element.removeAttribute(attribute.name)
-      }
-    })
-  })
-
-  const usedIds = new Set<string>()
-  const headings = Array.from(documentBody.querySelectorAll("h2, h3")).map((element, index) => {
-    const level = element.tagName.toLowerCase() === "h3" ? 3 : 2
-    const title = element.textContent?.trim() || `Section ${index + 1}`
-    const existingId = element.id.trim()
-    const baseId = existingId || slugify(title, `section-${index + 1}`)
-    let id = baseId
-    let suffix = 2
-
-    while (usedIds.has(id)) {
-      id = `${baseId}-${suffix}`
-      suffix += 1
-    }
-
-    usedIds.add(id)
-    element.id = id
-
-    return { id, title, level }
-  })
-
-  return {
-    html: documentBody.innerHTML,
-    headings,
-  }
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
 }

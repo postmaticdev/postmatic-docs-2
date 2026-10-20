@@ -1,0 +1,516 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-link: var(--link);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+  ============================================================
+  THEME CONFIGURATION
+  ============================================================
+
+  Theme: neutral (default)
+  Mode:  light (:root) / dark (.dark)
+
+  To switch to dark mode by default, change the ThemeProvider
+  defaultTheme prop in src/app/layout.tsx (and the default in
+  themeInitScript, src/components/theme-provider.tsx):
+    <ThemeProvider defaultTheme="dark">
+
+  To change theme colors, replace the OKLCH values below.
+  Visit https://ui.shadcn.com/themes to generate theme CSS.
+
+  To change the base color palette (e.g. stone, zinc, gray),
+  re-initialize with the shadcn CLI:
+    npx shadcn@latest init -t next --preset nova -y -f
+    npx shadcn@latest init -t next --preset vega -y -f
+
+  Available presets: nova, vega, maia, lyra, mira
+  Available base colors: neutral, stone, zinc, gray, mauve,
+                         olive, mist, taupe
+
+  CLI non-interactive theme change:
+    npx shadcn@latest init -t next -d -y -f
+  ============================================================
+*/
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #0066FF;
+  --primary-foreground: oklch(0.985 0 0);
+  --link: #0066FF;
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: #0066FF;
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.95 0.015 260);
+  --accent-foreground: #0066FF;
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: #0066FF;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: #0066FF;
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.95 0.015 260);
+  --sidebar-accent-foreground: #0066FF;
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: #0066FF;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.269 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: #0066FF;
+  --primary-foreground: oklch(0.985 0 0);
+  /* Biru merek terlalu gelap untuk teks di latar gelap (kontras < 4.5:1). */
+  --link: #5c9dff;
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.18 0.04 260);
+  --accent-foreground: #0066FF;
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #0066FF;
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #0066FF;
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.18 0.04 260);
+  --sidebar-accent-foreground: #0066FF;
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: #0066FF;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--primary), transparent 75%);
+  }
+}
+
+/* Tetap bisa di-scroll (roda mouse, sentuh, keyboard), hanya batang scroll-nya disembunyikan. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer components {
+  /* Isi artikel dari dashboard admin (HTML sudah disanitasi di server). */
+  .docs-content {
+    color: var(--foreground);
+    font-size: 1rem;
+    line-height: 1.75;
+    overflow-wrap: break-word;
+  }
+
+  .docs-content > :first-child {
+    margin-top: 0;
+  }
+
+  .docs-content h2,
+  .docs-content h3,
+  .docs-content h4 {
+    /* navbar (3.5rem) + bar breadcrumb (3rem) + ruang napas */
+    scroll-margin-top: 8rem;
+    color: var(--foreground);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .docs-content h2 {
+    margin-top: 2.75rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    font-size: 1.625rem;
+    line-height: 1.3;
+  }
+
+  .docs-content h3 {
+    margin-top: 2.25rem;
+    font-size: 1.3rem;
+    line-height: 1.4;
+  }
+
+  .docs-content h4 {
+    margin-top: 1.75rem;
+    font-size: 1.0625rem;
+    line-height: 1.5;
+  }
+
+  .docs-content h2 + *,
+  .docs-content h3 + *,
+  .docs-content h4 + * {
+    margin-top: 0.75rem;
+  }
+
+  .docs-content p {
+    margin-top: 1rem;
+  }
+
+  .docs-content p[style*="justify"] {
+    /* Rata kiri-kanan membuat celah kata besar di layar sempit. */
+    text-align: left !important;
+  }
+
+  .docs-content strong {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  .docs-content a {
+    color: var(--link);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .docs-content a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  .docs-content ul,
+  .docs-content ol {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+  }
+
+  .docs-content ul {
+    list-style: disc;
+  }
+
+  .docs-content ol {
+    list-style: decimal;
+  }
+
+  .docs-content li::marker {
+    color: var(--muted-foreground);
+  }
+
+  .docs-content li + li {
+    margin-top: 0.5rem;
+  }
+
+  .docs-content li > p {
+    margin-top: 0;
+  }
+
+  .docs-content li > ul,
+  .docs-content li > ol {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  .docs-content hr {
+    margin: 2.5rem 0;
+    border-color: var(--border);
+  }
+
+  .docs-content blockquote {
+    margin-top: 1.5rem;
+    border-left: 3px solid var(--primary);
+    padding-left: 1rem;
+    color: var(--muted-foreground);
+  }
+
+  .docs-content code {
+    border-radius: var(--radius-sm);
+    background: var(--muted);
+    padding: 0.15rem 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    font-weight: 600;
+  }
+
+  .docs-content pre {
+    margin-top: 1.25rem;
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--card);
+    padding: 1rem;
+  }
+
+  .docs-content pre code {
+    background: transparent;
+    padding: 0;
+    font-weight: 400;
+  }
+
+  .docs-content .docs-image {
+    display: block;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+  }
+
+  .docs-content .docs-image-center {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @media (max-width: 639px) {
+    .docs-content .docs-image {
+      /* Lebar parsial (mis. 75%) dari editor terlalu kecil di ponsel. */
+      width: 100% !important;
+    }
+  }
+
+  .docs-content .docs-table {
+    margin-top: 1.5rem;
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .docs-content .docs-table:focus-visible {
+    outline-offset: 2px;
+  }
+
+  .docs-content table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .docs-content table:has(tr > :nth-child(3)) {
+    min-width: 36rem;
+  }
+
+  .docs-content th,
+  .docs-content td {
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 0.9rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .docs-content th + th,
+  .docs-content td + td {
+    border-left: 1px solid var(--border);
+  }
+
+  .docs-content tr:last-child > td {
+    border-bottom: 0;
+  }
+
+  .docs-content th {
+    background: var(--muted);
+    color: var(--foreground);
+    font-weight: 600;
+  }
+
+  .docs-content td {
+    color: var(--muted-foreground);
+  }
+
+  .docs-content td strong {
+    color: var(--foreground);
+  }
+
+  .docs-content th p,
+  .docs-content td p {
+    margin-top: 0;
+  }
+
+  .docs-content th p + p,
+  .docs-content td p + p {
+    margin-top: 0.5rem;
+  }
+
+  .docs-content .admonition-card {
+    margin: 1.5rem 0;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    padding: 1rem;
+  }
+
+  .docs-content .admonition-card .adm-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+  }
+
+  .docs-content .admonition-card .adm-content {
+    margin-top: 0.35rem;
+    color: var(--muted-foreground);
+    font-size: 0.925rem;
+    line-height: 1.7;
+  }
+
+  .docs-content .admonition-card.info,
+  .docs-content .admonition-card.note {
+    border-color: color-mix(in oklch, var(--primary), transparent 70%);
+    background: color-mix(in oklch, var(--primary), transparent 94%);
+  }
+
+  .docs-content .admonition-card.tip {
+    border-color: oklch(0.8 0.12 150 / 45%);
+    background: oklch(0.97 0.03 150 / 65%);
+  }
+
+  .docs-content .admonition-card.warning,
+  .docs-content .admonition-card.caution {
+    border-color: oklch(0.78 0.14 70 / 55%);
+    background: oklch(0.97 0.04 70 / 70%);
+  }
+
+  .dark .docs-content .admonition-card.tip {
+    background: oklch(0.22 0.04 150 / 55%);
+  }
+
+  .dark .docs-content .admonition-card.warning,
+  .dark .docs-content .admonition-card.caution {
+    background: oklch(0.22 0.04 70 / 55%);
+  }
+
+  .docs-content .docs-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.75rem;
+    border-radius: var(--radius-md) !important;
+    padding: 0.7rem 1.4rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+  }
+
+  .docs-content .docs-btn-blue {
+    background: #2563eb !important;
+    color: white !important;
+  }
+
+  .docs-content .docs-btn-yellow {
+    background: #a16207 !important;
+    color: white !important;
+  }
+
+  .docs-content .docs-btn-red {
+    background: #dc2626 !important;
+    color: white !important;
+  }
+
+  .docs-content .docs-btn-green {
+    background: #15803d !important;
+    color: white !important;
+  }
+
+  .docs-content .docs-btn-grey {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+}
