@@ -5,6 +5,7 @@ import { notFound } from "next/navigation"
 import "../globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Footer } from "@/components/docs/footer"
+import { HapticsListener } from "@/components/haptics-listener"
 import { LeftSidebar } from "@/components/docs/left-sidebar"
 import { PostmaticLogo } from "@/components/docs/logo"
 import { TopNavbar } from "@/components/docs/top-navbar"
@@ -123,6 +124,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
               </div>
             </div>
           </I18nProvider>
+          <HapticsListener />
         </ThemeProvider>
       </body>
     </html>
