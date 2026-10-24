@@ -152,6 +152,11 @@
 @layer base {
   * {
     @apply border-border;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
   }
 
   html {
@@ -184,6 +189,11 @@
 }
 
 /* Tetap bisa di-scroll (roda mouse, sentuh, keyboard), hanya batang scroll-nya disembunyikan. */
+.docs-content img:not(a img),
+.docs-content video:not(a video) {
+  cursor: zoom-in;
+}
+
 @utility scrollbar-none {
   scrollbar-width: none;
   -ms-overflow-style: none;

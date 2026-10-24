@@ -17,6 +17,8 @@ export type DocumentationArticleMeta = {
   categoryName: string
   categorySlug: string
   href: string
+  // Nama ikon Lucide dalam kebab-case dari admin ("file-text"); kosong bila tidak diisi.
+  icon: string
 }
 
 export type DocumentationCategory = {
@@ -32,7 +34,7 @@ export type DocumentationNavSection = {
   title: string
   href: string
   type: DocumentationType
-  items: { title: string; href: string }[]
+  items: { title: string; href: string; icon: string }[]
 }
 
 export type RemoteDocumentationTocArticle = {
@@ -127,6 +129,14 @@ export function createArticleHref(categorySlug: string, articleSlug: string) {
   return `/${encodeURIComponent(categorySlug)}/${encodeURIComponent(articleSlug)}`
 }
 
+// Admin menyimpan "file-text", tapi data lama bisa berupa "FileText".
+function iconName(value: unknown) {
+  return text(value)
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/[\s_]+/g, "-")
+    .toLowerCase()
+}
+
 // Judul dari admin kadang ditulis huruf kecil semua ("terms & condition").
 function tidyTitle(value: string) {
   return value === value.toLowerCase() ? value.replace(/(^|\s)\p{L}/gu, (c) => c.toUpperCase()) : value
@@ -161,6 +171,7 @@ export function buildDocumentationCategories(
             categoryName: name,
             categorySlug: slug,
             href: createArticleHref(slug, articleSlug),
+            icon: iconName(item.icon),
           } satisfies DocumentationArticleMeta,
         ]
       })
@@ -179,7 +190,7 @@ export function buildNavigationSections(categories: DocumentationCategory[]): Do
     title: category.name,
     href: category.href,
     type: category.type,
-    items: category.articles.map((article) => ({ title: article.title, href: article.href })),
+    items: category.articles.map((article) => ({ title: article.title, href: article.href, icon: article.icon })),
   }))
 }
 

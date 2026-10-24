@@ -15,20 +15,36 @@ const TYPE_ICON: Record<DocumentationType, typeof FileText> = {
   legality: ShieldCheck,
 }
 
+// Nama ikon dari backend → SVG yang sudah dirender di server (lihat doc-icons.tsx).
+export type DocIcons = Record<string, React.ReactNode>
+
+function ItemIcon({
+  icon,
+  fallback: Fallback,
+  className,
+}: {
+  icon?: React.ReactNode
+  fallback: typeof FileText
+  className: string
+}) {
+  // Nama ikon dari backend yang tidak dikenal memakai ikon bawaan tipe dokumen.
+  if (!icon) return <Fallback className={className} aria-hidden="true" />
+  // Warna diwarisi SVG lewat currentColor.
+  return <span className={cn("flex", className)}>{icon}</span>
+}
+
 type LeftSidebarProps = {
   className?: string
   sections: DocumentationNavSection[]
+  icons?: DocIcons
   onLinkClick?: () => void
 }
 
 function isSectionActive(section: DocumentationNavSection, pathname: string) {
-  return (
-    safeDecode(section.href) === pathname ||
-    section.items.some((item) => safeDecode(item.href) === pathname)
-  )
+  return safeDecode(section.href) === pathname || section.items.some((item) => safeDecode(item.href) === pathname)
 }
 
-export function LeftSidebar({ className, sections, onLinkClick }: LeftSidebarProps) {
+export function LeftSidebar({ className, sections, icons = {}, onLinkClick }: LeftSidebarProps) {
   const { lang, dict } = useI18n()
   // Bandingkan tanpa prefiks bahasa (/en) karena href data selalu tanpa prefiks.
   const pathname = safeDecode(splitLocale(usePathname()).path)
@@ -52,9 +68,7 @@ export function LeftSidebar({ className, sections, onLinkClick }: LeftSidebarPro
   const linkClassName = (isActive: boolean) =>
     cn(
       "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
-      isActive
-        ? "bg-accent font-semibold text-link"
-        : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+      isActive ? "bg-accent font-semibold text-link" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
     )
 
   return (
@@ -102,12 +116,13 @@ export function LeftSidebar({ className, sections, onLinkClick }: LeftSidebarPro
                       aria-current={isActive ? "page" : undefined}
                       className={linkClassName(isActive)}
                     >
-                      <Icon
+                      <ItemIcon
+                        icon={icons[item.icon]}
+                        fallback={Icon}
                         className={cn(
                           "size-4 shrink-0 transition-colors",
                           isActive ? "text-link" : "text-muted-foreground/70 group-hover:text-foreground",
                         )}
-                        aria-hidden="true"
                       />
                       <span className="min-w-0 flex-1 truncate">{item.title}</span>
                     </Link>

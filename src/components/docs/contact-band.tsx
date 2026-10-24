@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { Mail } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { SupportIllustration } from "@/components/docs/support-illustration"
@@ -36,7 +37,10 @@ export function ContactBand() {
           size="lg"
           className="mt-5 bg-foreground px-6 font-semibold text-background hover:bg-foreground/85 sm:min-w-40"
         >
-          <a href={mailto}>{t.button}</a>
+          <a href={mailto}>
+            <Mail />
+            {t.button}
+          </a>
         </Button>
       </div>
       <SupportIllustration className="w-24 shrink-0 sm:w-36" />

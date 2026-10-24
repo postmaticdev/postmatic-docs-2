@@ -91,7 +91,7 @@ const id = {
     home: "Ke beranda",
   },
   footer: {
-    tagline: "Made with love for your business.",
+    tagline: "Postmatic - All rights reserved.",
     linksLabel: "Tautan footer",
     website: "Website",
     help: "Bantuan",
@@ -203,7 +203,7 @@ const en: Dictionary = {
     home: "Go home",
   },
   footer: {
-    tagline: "Made with love for your business.",
+    tagline: "Postmatic - All rights reserved.",
     linksLabel: "Footer links",
     website: "Website",
     help: "Help",

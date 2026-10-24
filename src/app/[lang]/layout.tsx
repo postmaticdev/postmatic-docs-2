@@ -4,9 +4,10 @@ import { notFound } from "next/navigation"
 
 import "../globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { Footer } from "@/components/docs/footer"
 import { HapticsListener } from "@/components/haptics-listener"
+import { renderDocIcons } from "@/components/docs/doc-icons"
 import { LeftSidebar } from "@/components/docs/left-sidebar"
+import { MediaLightbox } from "@/components/docs/media-lightbox"
 import { PostmaticLogo } from "@/components/docs/logo"
 import { TopNavbar } from "@/components/docs/top-navbar"
 import { LOCALES, OPEN_GRAPH_LOCALE, isLocale, localizeHref } from "@/i18n/config"
@@ -30,7 +31,10 @@ const jetBrainsMono = JetBrains_Mono({
   preload: false,
 })
 
-type LayoutProps = { children: React.ReactNode; params: Promise<{ lang: string }> }
+type LayoutProps = {
+  children: React.ReactNode
+  params: Promise<{ lang: string }>
+}
 
 export const revalidate = 300
 
@@ -75,7 +79,12 @@ export async function generateMetadata({ params }: Omit<LayoutProps, "children">
       ? {
           index: true,
           follow: true,
-          googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+          },
         }
       : { index: false, follow: false },
     formatDetection: { telephone: false, email: false, address: false },
@@ -97,6 +106,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
 
   const dict = getDictionary(lang)
   const { sections } = await getDocumentationIndex()
+  const icons = renderDocIcons(sections)
 
   return (
     <html lang={lang} className={`${inter.variable} ${jetBrainsMono.variable}`} suppressHydrationWarning>
@@ -113,15 +123,14 @@ export default async function RootLayout({ children, params }: LayoutProps) {
             >
               {dict.nav.skipToContent}
             </a>
-            <TopNavbar logo={<PostmaticLogo />} sections={sections} />
+            <TopNavbar logo={<PostmaticLogo className="h-5" />} sections={sections} icons={icons} />
+            <MediaLightbox />
             <div className="mx-auto flex w-full max-w-screen-2xl">
               <aside className="scrollbar-none sticky top-14 hidden h-[calc(100svh-3.5rem)] w-64 shrink-0 overflow-y-auto overscroll-contain border-r md:block lg:w-72">
-                <LeftSidebar sections={sections} />
+                <LeftSidebar sections={sections} icons={icons} />
               </aside>
-              <div className="flex min-h-[calc(100svh-3.5rem)] min-w-0 flex-1 flex-col">
-                <div className="flex flex-1">{children}</div>
-                <Footer lang={lang} dict={dict} />
-              </div>
+              {/* Footer dirender tiap halaman di dalam kolom konten agar TOC kanan tetap setinggi layar. */}
+              <div className="flex min-h-[calc(100svh-3.5rem)] min-w-0 flex-1">{children}</div>
             </div>
           </I18nProvider>
           <HapticsListener />

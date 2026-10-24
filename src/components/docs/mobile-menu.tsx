@@ -2,13 +2,13 @@
 
 import type * as React from "react"
 import Link from "next/link"
-import { Search, X } from "lucide-react"
+import { ArrowRight, Search, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { ModeToggle } from "@/components/mode-toggle"
 import { LanguageSwitcher } from "@/components/docs/language-switcher"
-import { LeftSidebar } from "@/components/docs/left-sidebar"
+import { LeftSidebar, type DocIcons } from "@/components/docs/left-sidebar"
 import { localizeHref } from "@/i18n/config"
 import { useI18n } from "@/i18n/provider"
 import type { DocumentationNavSection } from "@/lib/documentation-model"
@@ -20,9 +20,10 @@ type MobileMenuProps = {
   onSearch: () => void
   logo: React.ReactNode
   sections: DocumentationNavSection[]
+  icons: DocIcons
 }
 
-export default function MobileMenu({ open, onOpenChange, onSearch, logo, sections }: MobileMenuProps) {
+export default function MobileMenu({ open, onOpenChange, onSearch, logo, sections, icons }: MobileMenuProps) {
   const { lang, dict } = useI18n()
 
   return (
@@ -58,12 +59,15 @@ export default function MobileMenu({ open, onOpenChange, onSearch, logo, section
         </div>
 
         <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          <LeftSidebar sections={sections} onLinkClick={() => onOpenChange(false)} />
+          <LeftSidebar sections={sections} icons={icons} onLinkClick={() => onOpenChange(false)} />
         </div>
 
         <div className="shrink-0 border-t p-4">
           <Button size="lg" className="w-full font-semibold" asChild>
-            <a href={START_URL}>{dict.nav.start}</a>
+            <a href={START_URL}>
+              {dict.nav.start}
+              <ArrowRight />
+            </a>
           </Button>
         </div>
       </SheetContent>

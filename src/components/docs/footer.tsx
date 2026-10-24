@@ -15,10 +15,9 @@ export function Footer({ lang, dict }: { lang: Locale; dict: Dictionary }) {
 
   return (
     <footer className="flex border-t bg-background">
-      {/* Kolom sama dengan artikel & band kontak (plus ruang sidebar kanan di xl).
-          Mobile: semua rata tengah; desktop: identitas di kiri, tautan di kanan. */}
+      {/* Mobile: semua rata tengah; desktop: identitas di kiri, tautan rata kanan. */}
       <div className="min-w-0 flex-1">
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-4 py-6 text-center sm:px-6 lg:flex-row lg:justify-between lg:text-left">
+        <div className="flex w-full flex-col items-center gap-4 px-4 py-6 text-center sm:px-6 lg:flex-row lg:justify-between lg:text-left">
           <div className="flex flex-col items-center gap-1.5 text-sm text-muted-foreground sm:flex-row sm:gap-2">
             <Link href={localizeHref(lang, "/")} className="flex w-fit items-center gap-2">
               <PostmaticLogo className="h-4" />
@@ -28,11 +27,11 @@ export function Footer({ lang, dict }: { lang: Locale; dict: Dictionary }) {
               ·
             </span>
             <span className="text-xs">
-              © {new Date().getFullYear()} - {dict.footer.tagline}
+              © {new Date().getFullYear()} {dict.footer.tagline}
             </span>
           </div>
 
-          <nav aria-label={dict.footer.linksLabel}>
+          <nav aria-label={dict.footer.linksLabel} className="lg:ml-auto">
             <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm font-medium text-muted-foreground lg:justify-end">
               {links.map((link) => (
                 <li key={link.label}>
@@ -49,7 +48,6 @@ export function Footer({ lang, dict }: { lang: Locale; dict: Dictionary }) {
           </nav>
         </div>
       </div>
-      <div className="hidden w-64 shrink-0 xl:block" aria-hidden="true" />
     </footer>
   )
 }
