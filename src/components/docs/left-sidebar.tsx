@@ -1,5 +1,8 @@
+"use client"
+
 import * as React from "react"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, FileText, ShieldCheck } from "lucide-react"
+import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 import {
@@ -15,7 +18,6 @@ type LeftSidebarProps = {
   activeHref?: string
   isLoading?: boolean
   onLinkClick?: () => void
-  onNavigate?: (href: string) => void
 }
 
 export function LeftSidebar({
@@ -24,25 +26,8 @@ export function LeftSidebar({
   activeHref,
   isLoading = false,
   onLinkClick,
-  onNavigate,
 }: LeftSidebarProps) {
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({})
-
-  React.useEffect(() => {
-    setOpenSections((current) =>
-      Object.fromEntries(
-        sections.map((section) => [
-          section.title,
-          current[section.title] ??
-            section.items.some((item) => item.href === activeHref) ??
-            false,
-        ]),
-      ),
-    )
-  }, [activeHref, sections])
-
-  const toggleSection = (title: string) =>
-    setOpenSections((prev) => ({ ...prev, [title]: !prev[title] }))
 
   if (isLoading) {
     return (
@@ -71,13 +56,17 @@ export function LeftSidebar({
   return (
     <nav className={cn("flex flex-col gap-6 p-4", className)}>
       {sections.map((section) => {
-        const isOpen = openSections[section.title]
+        const containsActiveItem = section.items.some((item) => item.href === activeHref)
+        const isOpen = openSections[section.title] ?? containsActiveItem
+
+        const toggleSection = () =>
+          setOpenSections((current) => ({ ...current, [section.title]: !isOpen }))
 
         return (
           <Collapsible
             key={section.title}
             open={isOpen}
-            onOpenChange={() => toggleSection(section.title)}
+            onOpenChange={toggleSection}
           >
             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground">
               <span className="truncate text-left">{section.title}</span>
@@ -88,20 +77,14 @@ export function LeftSidebar({
             <CollapsibleContent>
               <ul className="mt-1 flex flex-col gap-0.5 border-l pl-3">
                 {section.items.map((item) => {
-                  const Icon = item.icon
+                  const Icon = item.type === "legality" ? ShieldCheck : FileText
                   const isActive = item.href === activeHref
 
                   return (
                     <li key={item.href}>
-                      <a
+                      <Link
                         href={item.href}
-                        onClick={(event) => {
-                          if (onNavigate) {
-                            event.preventDefault()
-                            onNavigate(item.href)
-                          }
-                          onLinkClick?.()
-                        }}
+                        onClick={onLinkClick}
                         className={cn(
                           "group flex items-center gap-2 rounded-md py-1.5 pr-2 pl-2 text-sm transition-colors",
                           isActive
@@ -109,23 +92,21 @@ export function LeftSidebar({
                             : "text-muted-foreground hover:text-foreground",
                         )}
                       >
-                        {Icon && (
-                          <Icon
-                            className={cn(
-                              "size-4 shrink-0 transition-colors",
-                              isActive
-                                ? "text-primary"
-                                : "text-muted-foreground/70 group-hover:text-foreground",
-                            )}
-                          />
-                        )}
+                        <Icon
+                          className={cn(
+                            "size-4 shrink-0 transition-colors",
+                            isActive
+                              ? "text-primary"
+                              : "text-muted-foreground/70 group-hover:text-foreground",
+                          )}
+                        />
                         <span className="min-w-0 flex-1 truncate">{item.title}</span>
                         {item.badge && (
                           <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
                             {item.badge}
                           </span>
                         )}
-                      </a>
+                      </Link>
                     </li>
                   )
                 })}

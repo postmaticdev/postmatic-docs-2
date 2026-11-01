@@ -13,11 +13,14 @@ export function Footer({ className, ...props }: FooterProps) {
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between gap-4 px-4 py-4 sm:flex-row sm:px-6 md:py-5">
         <div className="flex flex-col items-center gap-1.5 text-center text-sm text-muted-foreground sm:flex-row sm:gap-2 sm:text-left">
           <div className="flex items-center gap-2">
+            {/* Regular img elements preserve the reference dimensions during migration. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo1.png"
               alt="Postmatic Logo"
               className="h-4 w-auto dark:hidden"
             />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo2.png"
               alt="Postmatic Logo"
